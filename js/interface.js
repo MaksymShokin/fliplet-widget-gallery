@@ -24,7 +24,6 @@ const FILE_PICKER_CONFIG = {
   autoSelectOnUpload: true
 };
 
-
 $imagesContainer
   .on('click', '.image', onImageClick);
 
@@ -41,9 +40,13 @@ $('body')
   .keydown(editImageTitleBinding);
 
 function editImageTitleBinding(e) {
-  if($editImageTitle.is(':visible'))
-    var code = e.keyCode || e.which;
-  switch(code){
+  if (!$editImageTitle.is(':visible')) {
+    return;
+  }
+
+  var code = e.keyCode || e.which;
+
+  switch (code) {
     case 27:
       onEditClose(e);
       break;
@@ -67,14 +70,12 @@ function selectPrevImage(e) {
   e.preventDefault();
   imageForEditIndex = imageForEditIndex - 1 >= 0 ? imageForEditIndex - 1 : 0;
   selectedImage = data.images[imageForEditIndex];
-
 }
 
 function selectNextImage(e) {
   e.preventDefault();
   imageForEditIndex = imageForEditIndex + 1 < data.images.length ? imageForEditIndex + 1 : imageForEditIndex;
   selectedImage = data.images[imageForEditIndex];
-
 }
 
 function changeWidgetHeader() {
@@ -85,11 +86,11 @@ function changeWidgetHeader() {
 }
 
 
-function init(){
+function init() {
   drawImages();
 }
 
-$addImageButton.on('click', function (e) {
+$addImageButton.on('click', function(e) {
   e.preventDefault();
   if (providerInstance) return;
   onEditClose(e);
@@ -99,7 +100,7 @@ $addImageButton.on('click', function (e) {
 
   providerInstance = Fliplet.Widget.open('com.fliplet.file-picker', {
     data: FILE_PICKER_CONFIG,
-    onEvent: function (e, data) {
+    onEvent: function(e, data) {
       switch (e) {
         case 'widget-rendered':
           beginAnimationFilePicker();
@@ -115,7 +116,7 @@ $addImageButton.on('click', function (e) {
     }
   });
 
-  providerInstance.then(function (data) {
+  providerInstance.then(function(data) {
     Fliplet.Studio.emit('widget-save-label-update', {text: 'Save & Close'});
     Fliplet.Widget.info('');
     Fliplet.Widget.toggleCancelButton(true);
@@ -128,8 +129,8 @@ $addImageButton.on('click', function (e) {
   });
 });
 
-function savePreview(){
-  Fliplet.Widget.save(data).then(function () {
+function savePreview() {
+  Fliplet.Widget.save(data).then(function() {
     Fliplet.Studio.emit('reload-widget-instance', widgetId);
   });
 }
@@ -146,8 +147,8 @@ function changeDragging(status) {
 
 $imagesContainer.sortable({
   disabled: false,
-  containment: "parent",
-  tolerance: "pointer"
+  containment: 'parent',
+  tolerance: 'pointer'
 });
 
 var indexImageForSort;
@@ -164,14 +165,12 @@ $imagesContainer.on('sortstop', function(event, ui) {
   savePreview();
 });
 
-var $draggingElement;
-
-function addImage(image){
+function addImage(image) {
   image.urlSmall = Fliplet.Env.get('apiUrl') + 'v1/media/files/' + image.id + '/contents?size=small';
   var $imgElement = $(imageTemplate(image));
 
   $imgElement[0].onmouseover = function() {
-    $deleteBtn = $(this).find('.image-overlay i');
+    var $deleteBtn = $(this).find('.image-overlay i');
     $deleteBtn[0].onclick = function() {
       onEditClose();
       data.images.splice(getSelectedImage($imgElement).index, 1);
@@ -192,12 +191,12 @@ function beginAnimationFilePicker() {
 
   $PROVIDER_IFRAME.show();
 
-  animInterval = setInterval(function () {
+  animInterval = setInterval(function() {
     animProgress -= 2;
     $PROVIDER_IFRAME.css({left: animProgress + '%'});
-    var opacity = 1 - animProgress/100;
+    var opacity = 1 - animProgress / 100;
     opacity = opacity > 0.5 ? 0.5 : opacity;
-    if (animProgress == 0) {
+    if (animProgress === 0) {
       opacity = 0;
       clearInterval(animInterval);
     }
@@ -205,17 +204,17 @@ function beginAnimationFilePicker() {
   }, 5);
 }
 
-Fliplet.Widget.onSaveRequest(function () {
+Fliplet.Widget.onSaveRequest(function() {
   if (providerInstance) {
     return providerInstance.forwardSaveRequest();
   }
 
-  Fliplet.Widget.save(data).then(function () {
+  Fliplet.Widget.save(data).then(function() {
     Fliplet.Widget.complete();
   });
 });
 
-window.addEventListener('message', function (event) {
+window.addEventListener('message', function(event) {
   if (event.data === 'cancel-button-pressed') {
     if (!providerInstance) return;
     providerInstance.close();
@@ -237,11 +236,12 @@ function getSelectedImage($img) {
   };
 }
 
-function onImageClick(e){
+function onImageClick(e) {
   e.preventDefault();
   var $el = $(this);
   var selectedImageObj = getSelectedImage($el);
-  if(selectedImageObj.index === imageForEditIndex) return;
+
+  if (selectedImageObj.index === imageForEditIndex) return;
   selectedImage = selectedImageObj.img;
   imageForEditIndex = selectedImageObj.index;
   $editInput.val(selectedImage.title || '');
@@ -252,28 +252,28 @@ function onImageClick(e){
 }
 
 $editInput.keyup(function( event ) {
-  if ( event.which == 13 ) {
+  if (event.which === 13) {
     event.preventDefault();
     changeImageTitle();
     onEditClose(event);
   }
 });
 
-function onInputChange(e){
+function onInputChange() {
   changeImageTitle();
 }
 
-function changeImageTitle(){
+function changeImageTitle() {
   if (!selectedImage) return;
   selectedImage.title = $editInput.val() ? $editInput.val() : '';
-  $el = $($('div.image-library').children()[imageForEditIndex]).find('.title-text');
+  var $el = $($('div.image-library').children()[imageForEditIndex]).find('.title-text');
   selectedImage.title ?
     $el.removeClass('title-default-text').text(selectedImage.title) :
     $el.text('').addClass('title-default-text');
 }
 
 function onEditClose(e) {
-  if(e) e.preventDefault();
+  if (e) e.preventDefault();
   $editImageTitle.detach();
   changeDragging(true);
 }
@@ -283,7 +283,6 @@ function toggleImages() {
 }
 
 function onEditClick() {
-
   var imageIndex = imageForEditIndex;
   onEditClose();
   toggleImages();
@@ -292,7 +291,7 @@ function onEditClick() {
   Fliplet.Studio.emit('widget-save-label-update', {text: 'Save changes'});
   providerInstance = Fliplet.Widget.open('com.fliplet.image-editor', {
     data: {image: selectedImage},
-    onEvent: function (e, data) {
+    onEvent: function(e) {
       switch (e) {
         case 'widget-rendered':
           beginAnimationFilePicker();
@@ -307,7 +306,7 @@ function onEditClick() {
     }
   });
 
-  providerInstance.then(function (eventData) {
+  providerInstance.then(function(eventData) {
     eventData.data.image.title = data.images[imageIndex].title;
     data.images[imageIndex] = eventData.data.image;
     onEditClose();
@@ -320,10 +319,9 @@ function onEditClick() {
     drawImages();
     savePreview();
   });
-
 }
 
 init();
 
 
-//use window.postMessage("save-widget", "*"); to click "Save and click"
+// use window.postMessage("save-widget", "*"); to click "Save and click"
